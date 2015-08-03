@@ -1,0 +1,17 @@
+{
+    "contents" : "# Sample .travis.yml for R projects\n\nlanguage: r\nwarnings_are_errors: true\nsudo: required\n\nenv:\n global:\n   - CRAN: http://cran.rstudio.com\n\nnotifications:\n  email:\n    on_success: change\n    on_failure: change\n\nr_github_packages:\n  - jimhester/covr\n\nafter_success:\n  - Rscript -e 'library(covr);coveralls()'",
+    "created" : 1438644795243.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "457605840",
+    "id" : "6221610D",
+    "lastKnownWriteTime" : 1438644802,
+    "path" : "~/source/pirouette/.travis.yml",
+    "project_path" : ".travis.yml",
+    "properties" : {
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "type" : "yaml"
+}

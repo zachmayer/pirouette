@@ -1,0 +1,18 @@
+Package: pirouette
+Type: Package
+Title: Fast Rotation Forests
+Version: 0.0.9999
+Date: 2015-08-03
+Authors@R: person(c("Zachary", "A."), "Deane-Mayer", role = c("aut", "cre"),
+    email = "zach.mayer@gmail.com")
+Maintainer: Who to complain to <yourfault@somewhere.net>
+Description: Description: Really fast rotation forests for sparse data in R.
+URL: https://github.com/zachmayer/pirouette
+BugReports: https://github.com/zachmayer/pirouette/issues
+Depends: 
+    R (>= 3.1.0)
+Imports: 
+    Matrix
+License: MIT + file LICENSE
+LazyData: TRUE
+Suggests: testthat
