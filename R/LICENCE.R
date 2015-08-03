@@ -1,2 +1,0 @@
-YEAR: 2013-2015
-COPYRIGHT HOLDER: Zachary Albert Mayer
