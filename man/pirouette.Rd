@@ -4,12 +4,16 @@
 \alias{pirouette}
 \title{pirouette}
 \usage{
-pirouette(x, y, ctrl = pirouetteControl())
+pirouette(x, y, ctrl = pirouetteControl(), ...)
 }
 \arguments{
 \item{x}{a sparse matrix of x variables}
 
 \item{y}{the target variable for classification or regression}
+
+\item{ctrl}{a list of control parameters for the algorithm}
+
+\item{..}{passed through enpointe to rpart}
 }
 \value{
 an object of class pirouette

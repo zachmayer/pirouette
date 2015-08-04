@@ -9,12 +9,13 @@ Maintainer: Who to complain to <yourfault@somewhere.net>
 Description: Description: Really fast rotation forests for sparse data in R.
 URL: https://github.com/zachmayer/pirouette
 BugReports: https://github.com/zachmayer/pirouette/issues
-Depends:
+Depends: 
     R (>= 3.2.0)
-Imports:
+Imports: 
     Matrix,
     foreach,
-    methods
+    methods,
+    rpart
 License: MIT + file LICENSE
 LazyData: TRUE
 Suggests: testthat

@@ -9,7 +9,7 @@ pirouetteControl(mtry = 2, nobs = 500)
 \arguments{
 \item{mtry}{dimensionality of the random projection}
 
-\item{nobs}{number of observations to use to fit each tree}
+\item{nobs}{maximum number of observations used per tree}
 }
 \value{
 a list

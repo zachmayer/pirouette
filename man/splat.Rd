@@ -4,15 +4,22 @@
 \alias{splat}
 \title{splat}
 \usage{
-splat(x, mtry = 2)
+splat(x, mtry = 2, retx = TRUE)
 }
 \arguments{
 \item{x}{a sparse matrix}
+
+\item{mtry}{new dimensionality}
+
+\item{retx}{If true, return the splatted matrix as well as the rotation.}
 }
 \value{
-a sparse Matrix
+a splatted Matrix
 }
 \description{
 Splat a matrix into a lower dimension.
+}
+\examples{
+splat(matrix(runif(100), ncol=10), 2)
 }
 
