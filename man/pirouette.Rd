@@ -4,7 +4,7 @@
 \alias{pirouette}
 \title{pirouette}
 \usage{
-pirouette(x, y)
+pirouette(x, y, ctrl = pirouetteControl())
 }
 \arguments{
 \item{x}{a sparse matrix of x variables}
@@ -16,5 +16,8 @@ an object of class pirouette
 }
 \description{
 Random rotation forests for sparse data
+}
+\references{
+\url{http://web.stanford.edu/~hastie/Papers/Ping/KDD06_rp.pdf}
 }
 
