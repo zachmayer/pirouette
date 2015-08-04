@@ -20,7 +20,7 @@ a vector
 Predict from a single rotation tree.
 }
 \examples{
-m <- enpointe(matrix(runif(1000), nrow=100), runif(100))
-predict(m, matrix(runif(10), ncol=10))
+m <- enpointe(matrix(runif(10000), ncol=10), runif(100))
+predict(m, matrix(runif(1000), ncol=10))
 }
 

@@ -22,6 +22,6 @@ an object of class pirouette
 Random rotation forests for sparse data
 }
 \references{
-\url{http://web.stanford.edu/~hastie/Papers/Ping/KDD06_rp.pdf}
+\url{https://stat.ethz.ch/pipermail/r-sig-hpc/2013-January/001575.html}
 }
 

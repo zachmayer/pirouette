@@ -1,17 +1,23 @@
 #' @title pirouetteControl
 #' @description Define a random sparse projection
 #'
+#' @param ntrees number of models to fit
 #' @param mtry dimensionality of the random projection
 #' @param nobs maximum number of observations used per tree
+#' @param allowParallel the function to run in parallel (if a foreach backend is loaded)
 #' @return a list
 #' @export
 pirouetteControl <- function(
+  ntrees = 100,
   mtry = 2,
-  nobs = 500
+  nobs = 500,
+  allowParallel = TRUE
   ){
   list(
+    ntrees = ntrees,
     mtry = mtry,
-    nobs = nobs
+    nobs = nobs,
+    allowParallel = allowParallel
   )
 }
 
@@ -96,7 +102,7 @@ enpointe <- function(x, y, weights=NULL, maxrows=500, ...){
   #Subset if needed
   if(nrow(x_splat$x) > maxrows){
     keep <- sample(1:nrow(x_splat$x), maxrows)
-    x_splat$x <- x_splat$x[,]
+    x_splat$x <- x_splat$x[keep,]
     y <- y[keep]
   }
 
@@ -132,8 +138,8 @@ enpointe <- function(x, y, weights=NULL, maxrows=500, ...){
 #' @return a vector
 #' @export
 #' @examples
-#' m <- enpointe(matrix(runif(1000), nrow=100), runif(100))
-#' predict(m, matrix(runif(10), ncol=10))
+#' m <- enpointe(matrix(runif(10000), ncol=10), runif(100))
+#' predict(m, matrix(runif(1000), ncol=10))
 predict.enpointe <- function(object, newx, ...){
   newx <- data.frame(as.matrix(newx%*% object[['r']]))
   if(object$model$method == 'anova'){
@@ -159,9 +165,9 @@ predict.enpointe <- function(object, newx, ...){
 #' @param ctrl a list of control parameters for the algorithm
 #' @param ... passed through enpointe to rpart
 #'
-#'@references \url{http://web.stanford.edu/~hastie/Papers/Ping/KDD06_rp.pdf}
+#'@references \url{https://stat.ethz.ch/pipermail/r-sig-hpc/2013-January/001575.html}
 #'
-#' @importFrom foreach %do% %dopar%
+#' @importFrom foreach foreach %do% %dopar%
 #' @return an object of class pirouette
 #' @export
 pirouette <- function(x, y, ctrl = pirouetteControl(), ...){
@@ -169,5 +175,49 @@ pirouette <- function(x, y, ctrl = pirouetteControl(), ...){
   stopifnot(is.vector(y))
   stopifnot(nrow(x) == length(y))
 
+  `%op%` <- if(ctrl$allowParallel) `%dopar%` else `%do%`
 
+  models <- foreach(i=1:ctrl$ntrees) %op% {
+    enpointe(x, y)
+  }
+
+  out <- list(
+    models = models
+  )
+  class(out) <- 'pirouette'
+  return(out)
+}
+
+#' @title Make predictions from a pirouette object
+#' @description Predict from a pirouette forest
+#'
+#' @param object an pirouette object
+#' @param newx A sparse matrix.
+#' @param allowParallel Allow predictions in parallel
+#' @param ... passed to predict.enpointe
+#'
+#' @method predict pirouette
+#' @importFrom foreach foreach %do% %dopar%
+#' @return a vector
+#' @export
+#'
+#' @examples
+#' nrow <- 10000
+#' ncol <- 100
+#' m <- pirouette(matrix(runif(nrow * ncol), ncol=ncol), runif(nrow))
+#' predict(m, matrix(runif(ncol), ncol=ncol))
+predict.pirouette <- function(object, newx, allowParallel = FALSE, ...){
+
+  `%op%` <- if(allowParallel) `%dopar%` else `%do%`
+
+  p <- foreach(
+    i=seq_along(object$models), .combine=cbind, .multicombine=TRUE
+  ) %op% {
+    predict.enpointe(object$models[[i]], newx, ...)
+  }
+
+  #dirty dirty hack
+  m <- median(p, na.rm=TRUE)
+  p[!is.finite(p)] <- m
+  return(rowMeans(p))
 }
