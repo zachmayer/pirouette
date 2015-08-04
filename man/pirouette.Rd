@@ -13,7 +13,7 @@ pirouette(x, y, ctrl = pirouetteControl(), ...)
 
 \item{ctrl}{a list of control parameters for the algorithm}
 
-\item{..}{passed through enpointe to rpart}
+\item{...}{passed through enpointe to rpart}
 }
 \value{
 an object of class pirouette

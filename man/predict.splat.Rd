@@ -4,12 +4,14 @@
 \alias{predict.splat}
 \title{Make predictions from a splatted object}
 \usage{
-\method{predict}{splat}(object, newx)
+\method{predict}{splat}(object, newx, ...)
 }
 \arguments{
 \item{object}{a splat object}
 
 \item{newx}{A sparse matrix.}
+
+\item{...}{ignored}
 }
 \value{
 a sparse Matrix

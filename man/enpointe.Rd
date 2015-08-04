@@ -11,12 +11,14 @@ enpointe(x, y, weights = NULL, maxrows = 500, ...)
 
 \item{y}{the target variable for classification or regression}
 
+\item{weights}{option case weights}
+
 \item{maxrows}{the maximum number of rows to use for the tree fit}
 
 \item{...}{passed to rpart}
 }
 \value{
-an object of class pirouette
+an object of class enpointe
 }
 \description{
 This is the workhorse function of the pirouette package.  It

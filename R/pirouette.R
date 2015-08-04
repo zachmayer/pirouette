@@ -54,6 +54,7 @@ splat <- function(x, mtry=2, retx=TRUE){
 #'
 #' @param object a splat object
 #' @param newx A sparse matrix.
+#' @param ... ignored
 #'
 #' @import methods
 #' @importMethodsFrom Matrix %*%
@@ -64,7 +65,7 @@ splat <- function(x, mtry=2, retx=TRUE){
 #' @examples
 #' x <- splat(matrix(runif(100), ncol=10), 2)
 #' predict(x, matrix(runif(10), ncol=10))
-predict.splat <- function(object, newx){
+predict.splat <- function(object, newx, ...){
   newx %*% object[['r']]
 }
 
@@ -74,6 +75,7 @@ predict.splat <- function(object, newx){
 #'
 #' @param x a sparse matrix of x variables
 #' @param y the target variable for classification or regression
+#' @param weights option case weights
 #' @param maxrows the maximum number of rows to use for the tree fit
 #' @param ... passed to rpart
 #'
@@ -81,7 +83,7 @@ predict.splat <- function(object, newx){
 #' @importFrom rpart rpart
 #' @export
 #'
-#' @return an object of class pirouette
+#' @return an object of class enpointe
 enpointe <- function(x, y, weights=NULL, maxrows=500, ...){
 
   #Drop 0s
@@ -145,7 +147,7 @@ predict.enpointe <- function(object, newx, ...){
       return(out)
     }
   } else{
-    error(paste('rpart method', object$model$method, 'not supported'))
+    stop(paste('rpart method', object$model$method, 'not supported'))
   }
 }
 
@@ -155,10 +157,11 @@ predict.enpointe <- function(object, newx, ...){
 #' @param x a sparse matrix of x variables
 #' @param y the target variable for classification or regression
 #' @param ctrl a list of control parameters for the algorithm
-#' @param .. passed through enpointe to rpart
+#' @param ... passed through enpointe to rpart
 #'
 #'@references \url{http://web.stanford.edu/~hastie/Papers/Ping/KDD06_rp.pdf}
 #'
+#' @importFrom foreach %do% %dopar%
 #' @return an object of class pirouette
 #' @export
 pirouette <- function(x, y, ctrl = pirouetteControl(), ...){
