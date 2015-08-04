@@ -123,8 +123,8 @@ pip-log.txt
 .mr.developer.cfg
 # Mac
 .DS_Store
-
 # R
 .RHistory
 .Rproj.user
 caretEnsemble_test_plots.png
+inst/doc

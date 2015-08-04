@@ -2,21 +2,18 @@
 #' @description Define a random sparse projection
 #'
 #' @param ntrees number of models to fit
-#' @param mtry dimensionality of the random projection
-#' @param nobs maximum number of observations used per tree
+#' @param newdim dimensions to project into
 #' @param allowParallel the function to run in parallel (if a foreach backend is loaded)
 #' @return a list
 #' @export
 pirouetteControl <- function(
   ntrees = 100,
-  mtry = 2,
-  nobs = 500,
+  newdim = 2,
   allowParallel = TRUE
   ){
   list(
     ntrees = ntrees,
-    mtry = mtry,
-    nobs = nobs,
+    newdim = newdim,
     allowParallel = allowParallel
   )
 }
@@ -25,7 +22,8 @@ pirouetteControl <- function(
 #' @description Splat a matrix into a lower dimension.
 #'
 #' @param x a sparse matrix
-#' @param mtry new dimensionality
+#' @param newdim new dimensionality
+#' @param prob the probability each entry of the rotation matrix is non-zero.  1/3 is one heuristic to use (for 3x faster processing), 1/sqrt(ncol(x)) is another, for sqrt(x)-fold faster processing.
 #' @param retx If true, return the splatted matrix as well as the rotation.
 #'
 #' @import methods
@@ -33,14 +31,16 @@ pirouetteControl <- function(
 #' @importFrom Matrix rsparsematrix
 #' @return a splatted Matrix
 #'
+#' @references \url{http://web.stanford.edu/~hastie/Papers/Ping/KDD06_rp.pdf}
+#'
 #' @export
 #' @examples splat(matrix(runif(100), ncol=10), 2)
-splat <- function(x, mtry=2, retx=TRUE){
+splat <- function(x, newdim=2, prob=1/sqrt(ncol(x)), retx=TRUE){
   D <- ncol(x)
-  nnz <- ceiling( D * 1/sqrt(D))
+  nnz <- ceiling(D * newdim * prob)
   r <- rsparsematrix(
     nrow = ncol(x),
-    ncol = mtry,
+    ncol = newdim,
     nnz = nnz,
     rand.x = function(n) sample(c(-1L,1L), nnz, replace=TRUE)
     )
@@ -82,7 +82,8 @@ predict.splat <- function(object, newx, ...){
 #' @param x a sparse matrix of x variables
 #' @param y the target variable for classification or regression
 #' @param weights option case weights
-#' @param maxrows the maximum number of rows to use for the tree fit
+#' @param newdim dimensions to project into
+#' @param prob passed to splat
 #' @param ... passed to rpart
 #'
 #' @importFrom Matrix drop0 rowSums
@@ -90,21 +91,11 @@ predict.splat <- function(object, newx, ...){
 #' @export
 #'
 #' @return an object of class enpointe
-enpointe <- function(x, y, weights=NULL, maxrows=500, ...){
+enpointe <- function(x, y, weights=NULL, newdim=2, prob=1/sqrt(ncol(x)), ...){
 
-  #Drop 0s
-  x_splat <- splat(x)
+  #Splat matrix
+  x_splat <- splat(x, newdim=newdim, prob=prob)
   x_splat$x <- drop0(x_splat$x)
-  keep <- rowSums(sign(x_splat$x)) >= 0
-  x_splat$x <- x_splat$x[keep,]
-  y <- y[keep]
-
-  #Subset if needed
-  if(nrow(x_splat$x) > maxrows){
-    keep <- sample(1:nrow(x_splat$x), maxrows)
-    x_splat$x <- x_splat$x[keep,]
-    y <- y[keep]
-  }
 
   #Fit model
   tmp <- data.frame('.outcome'=y, as.matrix(x_splat$x))
@@ -141,7 +132,7 @@ enpointe <- function(x, y, weights=NULL, maxrows=500, ...){
 #' m <- enpointe(matrix(runif(10000), ncol=10), runif(100))
 #' predict(m, matrix(runif(1000), ncol=10))
 predict.enpointe <- function(object, newx, ...){
-  newx <- data.frame(as.matrix(newx%*% object[['r']]))
+  newx <- data.frame(as.matrix(newx %*% object[['r']]))
   if(object$model$method == 'anova'){
     return(predict(object[['model']], newx, type = 'vector', ...))
   } else if(object$model$method == 'class'){
@@ -162,15 +153,19 @@ predict.enpointe <- function(object, newx, ...){
 #'
 #' @param x a sparse matrix of x variables
 #' @param y the target variable for classification or regression
+#' @param prob the probability each entry of the rotation matrix is non-zero.  1/3 is one heuristic to use (for 3x faster processing), 1/sqrt(ncol(x)) is another, for sqrt(x)-fold faster processing.  Passed through enpointe to splat.
 #' @param ctrl a list of control parameters for the algorithm
 #' @param ... passed through enpointe to rpart
 #'
-#'@references \url{https://stat.ethz.ch/pipermail/r-sig-hpc/2013-January/001575.html}
-#'
+#'@references \itemize{
+#'  \item{\url{https://stat.ethz.ch/pipermail/r-sig-hpc/2013-January/001575.html}}
+#'  \item{\url{http://web.stanford.edu/~hastie/Papers/Ping/KDD06_rp.pdf}}
+#'  \item{\url{http://stats.lse.ac.uk/fryzlewicz/rre/rre.pdf}}
+#'}
 #' @importFrom foreach foreach %do% %dopar%
 #' @return an object of class pirouette
 #' @export
-pirouette <- function(x, y, ctrl = pirouetteControl(), ...){
+pirouette <- function(x, y, prob=1/sqrt(ncol(x)), ctrl = pirouetteControl(), ...){
 
   stopifnot(is.vector(y) | is.factor(y))
   stopifnot(nrow(x) == length(y))
@@ -179,18 +174,20 @@ pirouette <- function(x, y, ctrl = pirouetteControl(), ...){
       warning('Less than 2 unique factor levels in classification problem.  Fitting models will probably work, but prediction wont.')
     }
     if(length(unique(y)) > 2){
-      warning('More than 2 unique factor levels in classification problem.  Fitting models will probably work, but prediction wont.')
+      stop('More than 2 unique factor levels in classification problem.  Multiclass is not yet supported.')
     }
   }
 
   `%op%` <- if(ctrl$allowParallel) `%dopar%` else `%do%`
 
   models <- foreach(i=1:ctrl$ntrees) %op% {
-    enpointe(x, y)
+    enpointe(x, y, prob=prob, newdim=ctrl$newdim, ...)
   }
 
   out <- list(
-    models = models
+    models = models,
+    ctrl = ctrl,
+    prob = prob
   )
   class(out) <- 'pirouette'
   return(out)

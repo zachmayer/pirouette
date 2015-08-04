@@ -4,7 +4,7 @@
 \alias{enpointe}
 \title{Random rotation tree}
 \usage{
-enpointe(x, y, weights = NULL, maxrows = 500, ...)
+enpointe(x, y, weights = NULL, maxrows = 500, prob = 1/sqrt(ncol(x)), ...)
 }
 \arguments{
 \item{x}{a sparse matrix of x variables}
@@ -14,6 +14,8 @@ enpointe(x, y, weights = NULL, maxrows = 500, ...)
 \item{weights}{option case weights}
 
 \item{maxrows}{the maximum number of rows to use for the tree fit}
+
+\item{prob}{passed to splat}
 
 \item{...}{passed to rpart}
 }

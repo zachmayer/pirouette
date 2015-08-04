@@ -1,0 +1,62 @@
+---
+title: "pirouette"
+author: "Zach Mayer"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Benchmark on a sparse matrix
+Pretend we have a dataset of 99,339 documents, with a vocabulary of 14,052 ngrams
+```{r}
+library(pirouette)
+data(sparse_text_matrix)
+X <- sparse_text_matrix
+summary(X@x)
+```
+
+Pretend our target is a simple logistic regression:
+```{r}
+Y <- (X %*% rnorm(ncol(X)))[,1]
+Y <- Y >= 0
+Y <- factor(Y)
+table(Y)
+```
+
+Benchmark runtime vs glmnet:
+```{r}
+suppressMessages(library(microbenchmark))
+suppressMessages(library(glmnet))
+suppressMessages(library(pirouette))
+suppressMessages(library(rpart))
+train_rows <- sample(c(TRUE, FALSE), nrow(X), replace=TRUE)
+microbenchmark(
+  pirouette_model = pirouette_model <- pirouette(
+    X[train_rows,], Y[train_rows], prob=10/sqrt(ncol(x)), ctrl = pirouetteControl(
+      ntrees=100, newdim=5
+      )
+    ),
+  glmnet_model = glmnet_model <- glmnet(
+    X[train_rows,], Y[train_rows], family='binomial'),
+  times = 1
+)
+object.size(pirouette_model) / object.size(glmnet_model)
+```
+
+Benchmark AUC vs glmnet: (TRY REGRESSION)
+```{r}
+library(caTools)
+p_glmnet <- predict(glmnet_model, X[!train_rows,])
+p_pirouette <- predict(pirouette_model, X[!train_rows,])
+
+auc_glmnet <- max(colAUC(p_glmnet, Y[!train_rows])[1,])
+auc_pirouette <- colAUC(p_pirouette, Y[!train_rows])[1,1]
+
+auc_pirouette / auc_glmnet
+auc_pirouette
+auc_glmnet
+hist(p_pirouette)
+```

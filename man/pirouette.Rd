@@ -4,12 +4,14 @@
 \alias{pirouette}
 \title{pirouette}
 \usage{
-pirouette(x, y, ctrl = pirouetteControl(), ...)
+pirouette(x, y, prob = 1/sqrt(ncol(x)), ctrl = pirouetteControl(), ...)
 }
 \arguments{
 \item{x}{a sparse matrix of x variables}
 
 \item{y}{the target variable for classification or regression}
+
+\item{prob}{the probability each entry of the rotation matrix is non-zero.  1/3 is one heuristic to use (for 3x faster processing), 1/sqrt(ncol(x)) is another, for sqrt(x)-fold faster processing.  Passed through enpointe to splat.}
 
 \item{ctrl}{a list of control parameters for the algorithm}
 
@@ -22,6 +24,9 @@ an object of class pirouette
 Random rotation forests for sparse data
 }
 \references{
-\url{https://stat.ethz.ch/pipermail/r-sig-hpc/2013-January/001575.html}
+\itemize{
+ \item{\url{https://stat.ethz.ch/pipermail/r-sig-hpc/2013-January/001575.html}}
+ \item{\url{http://web.stanford.edu/~hastie/Papers/Ping/KDD06_rp.pdf}}
+}
 }
 
