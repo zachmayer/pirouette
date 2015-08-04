@@ -4,8 +4,10 @@
 #' @param x a sparse matrix of x variables
 #' @param y the target variable for classification or regression
 #'
-#' @importFrom Matrix %*%
-#' @importFrom foreach %do% %doparallel%
+#' @import methods
+#' @importMethodsFrom Matrix %*%
+
+#' @importFrom foreach %do% %dopar%
 #'
 #' @return an object of class pirouette
 #' @export
