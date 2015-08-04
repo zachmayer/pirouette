@@ -172,8 +172,16 @@ predict.enpointe <- function(object, newx, ...){
 #' @export
 pirouette <- function(x, y, ctrl = pirouetteControl(), ...){
 
-  stopifnot(is.vector(y))
+  stopifnot(is.vector(y) | is.factor(y))
   stopifnot(nrow(x) == length(y))
+  if(is.factor(y)){
+    if(length(unique(y)) < 2){
+      warning('Less than 2 unique factor levels in classification problem.  Fitting models will probably work, but prediction wont.')
+    }
+    if(length(unique(y)) > 2){
+      warning('More than 2 unique factor levels in classification problem.  Fitting models will probably work, but prediction wont.')
+    }
+  }
 
   `%op%` <- if(ctrl$allowParallel) `%dopar%` else `%do%`
 
@@ -210,6 +218,7 @@ predict.pirouette <- function(object, newx, allowParallel = FALSE, ...){
 
   `%op%` <- if(allowParallel) `%dopar%` else `%do%`
 
+  #Todo: change combine from cbind if multiclass
   p <- foreach(
     i=seq_along(object$models), .combine=cbind, .multicombine=TRUE
   ) %op% {
@@ -219,5 +228,8 @@ predict.pirouette <- function(object, newx, allowParallel = FALSE, ...){
   #dirty dirty hack
   m <- median(p, na.rm=TRUE)
   p[!is.finite(p)] <- m
+
+  #Return
+  #Todo: for multiclass, average matricies, then normalize rows
   return(rowMeans(p))
 }
