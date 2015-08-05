@@ -4,7 +4,9 @@
 \alias{enpointe}
 \title{Random rotation tree}
 \usage{
-enpointe(x, y, weights = NULL, maxrows = 500, prob = 1/sqrt(ncol(x)), ...)
+enpointe(x, y, weights = NULL, newdim = 2, prob = 1/sqrt(ncol(x)),
+  gbm_control = list(n.trees = 1, interaction.depth = 2, shrinkage = 0.1,
+  verbose = FALSE), ...)
 }
 \arguments{
 \item{x}{a sparse matrix of x variables}
@@ -13,9 +15,11 @@ enpointe(x, y, weights = NULL, maxrows = 500, prob = 1/sqrt(ncol(x)), ...)
 
 \item{weights}{option case weights}
 
-\item{maxrows}{the maximum number of rows to use for the tree fit}
+\item{newdim}{dimensions to project into}
 
 \item{prob}{passed to splat}
+
+\item{gbm_control}{Control arguments to pass to the gbm call. Use 2 trees.}
 
 \item{...}{passed to rpart}
 }

@@ -4,7 +4,9 @@
 \alias{pirouette}
 \title{pirouette}
 \usage{
-pirouette(x, y, prob = 1/sqrt(ncol(x)), ctrl = pirouetteControl(), ...)
+pirouette(x, y, prob = 1/sqrt(ncol(x)), ctrl = pirouetteControl(),
+  gbm_control = list(n.trees = 1, interaction.depth = 2, shrinkage = 0.1,
+  verbose = FALSE), ...)
 }
 \arguments{
 \item{x}{a sparse matrix of x variables}
@@ -15,7 +17,9 @@ pirouette(x, y, prob = 1/sqrt(ncol(x)), ctrl = pirouetteControl(), ...)
 
 \item{ctrl}{a list of control parameters for the algorithm}
 
-\item{...}{passed through enpointe to rpart}
+\item{gbm_control}{a list of control parameters for the gbm}
+
+\item{...}{passed through enpointe to gbm}
 }
 \value{
 an object of class pirouette
@@ -27,6 +31,7 @@ Random rotation forests for sparse data
 \itemize{
  \item{\url{https://stat.ethz.ch/pipermail/r-sig-hpc/2013-January/001575.html}}
  \item{\url{http://web.stanford.edu/~hastie/Papers/Ping/KDD06_rp.pdf}}
+ \item{\url{http://stats.lse.ac.uk/fryzlewicz/rre/rre.pdf}}
 }
 }
 

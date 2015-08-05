@@ -4,15 +4,12 @@
 \alias{pirouetteControl}
 \title{pirouetteControl}
 \usage{
-pirouetteControl(ntrees = 100, mtry = 2, nobs = 500,
-  allowParallel = TRUE)
+pirouetteControl(ntrees = 100, newdim = 2, allowParallel = TRUE)
 }
 \arguments{
 \item{ntrees}{number of models to fit}
 
-\item{mtry}{dimensionality of the random projection}
-
-\item{nobs}{maximum number of observations used per tree}
+\item{newdim}{dimensions to project into}
 
 \item{allowParallel}{the function to run in parallel (if a foreach backend is loaded)}
 }

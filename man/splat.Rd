@@ -4,12 +4,12 @@
 \alias{splat}
 \title{splat}
 \usage{
-splat(x, mtry = 2, prob = 1/sqrt(ncol(x)), retx = TRUE)
+splat(x, newdim = 2, prob = 1/sqrt(ncol(x)), retx = TRUE)
 }
 \arguments{
 \item{x}{a sparse matrix}
 
-\item{mtry}{new dimensionality}
+\item{newdim}{new dimensionality}
 
 \item{prob}{the probability each entry of the rotation matrix is non-zero.  1/3 is one heuristic to use (for 3x faster processing), 1/sqrt(ncol(x)) is another, for sqrt(x)-fold faster processing.}
 

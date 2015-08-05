@@ -20,7 +20,9 @@ a vector
 Predict from a single rotation tree.
 }
 \examples{
-m <- enpointe(matrix(runif(10000), ncol=10), runif(100))
+a <- matrix(runif(10000), ncol=10)
+b <- as.vector(a \%*\% runif(ncol(a)))
+m <- enpointe(a, b, distribution='gaussian')
 predict(m, matrix(runif(1000), ncol=10))
 }
 

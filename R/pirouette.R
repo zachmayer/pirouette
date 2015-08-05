@@ -34,7 +34,8 @@ pirouetteControl <- function(
 #' @references \url{http://web.stanford.edu/~hastie/Papers/Ping/KDD06_rp.pdf}
 #'
 #' @export
-#' @examples splat(matrix(runif(100), ncol=10), 2)
+#' @examples
+#' splat(matrix(runif(100), ncol=10), 2)
 splat <- function(x, newdim=2, prob=1/sqrt(ncol(x)), retx=TRUE){
   D <- ncol(x)
   nnz <- ceiling(D * newdim * prob)
@@ -83,33 +84,53 @@ predict.splat <- function(object, newx, ...){
 #' @param y the target variable for classification or regression
 #' @param weights option case weights
 #' @param newdim dimensions to project into
+#' @param gbm_control Control arguments to pass to the gbm call. Use 2 trees.
 #' @param prob passed to splat
 #' @param ... passed to rpart
 #'
 #' @importFrom Matrix drop0 rowSums
-#' @importFrom rpart rpart
+#' @importFrom gbm gbm.fit
 #' @export
 #'
 #' @return an object of class enpointe
-enpointe <- function(x, y, weights=NULL, newdim=2, prob=1/sqrt(ncol(x)), ...){
+enpointe <- function(
+  x, y, weights=NULL,
+  newdim=2, prob=1/sqrt(ncol(x)),
+  gbm_control = list(
+    n.trees=1,
+    interaction.depth=2,
+    shrinkage=0.1,
+    verbose=FALSE
+  ), ...){
 
   #Splat matrix
   x_splat <- splat(x, newdim=newdim, prob=prob)
   x_splat$x <- drop0(x_splat$x)
 
+  #Subset to non-zero rows
+  #TODO: If all rows are 0, skip fitting, and always predict median
+  #TODO: Warning to splat with more dimensions
+  keep <- rowSums(sign(x_splat$x)) != 0
+  x_splat$x <- x_splat$x[keep,]
+  y <- y[keep]
+
   #Fit model
-  tmp <- data.frame('.outcome'=y, as.matrix(x_splat$x))
-  if(!is.null(weights)){
-    model <- rpart(.outcome ~ ., tmp, y=FALSE, ...)
-  } else {
-    model <- rpart(.outcome ~ ., tmp, weights=weights, y=FALSE, ...)
-  }
+  model <- gbm.fit(
+    x=data.frame(as.matrix(x_splat$x)),
+    y=y,
+    w=weights,
+    n.trees=gbm_control$n.trees,
+    interaction.depth=gbm_control$interaction.depth,
+    shrinkage=gbm_control$shrinkage,
+    verbose=gbm_control$verbose,
+    ...)
 
   #Todo: trim model more
   model$call <- NULL
   out <- list(
     r = x_splat$r,
-    model = model
+    model = model,
+    gbm_control = gbm_control
   )
   class(out) <- 'enpointe'
   return(out)
@@ -129,23 +150,13 @@ enpointe <- function(x, y, weights=NULL, newdim=2, prob=1/sqrt(ncol(x)), ...){
 #' @return a vector
 #' @export
 #' @examples
-#' m <- enpointe(matrix(runif(10000), ncol=10), runif(100))
+#' a <- matrix(runif(10000), ncol=10)
+#' b <- as.vector(a %*% runif(ncol(a)))
+#' m <- enpointe(a, b, distribution='gaussian')
 #' predict(m, matrix(runif(1000), ncol=10))
 predict.enpointe <- function(object, newx, ...){
-  newx <- data.frame(as.matrix(newx %*% object[['r']]))
-  if(object$model$method == 'anova'){
-    return(predict(object[['model']], newx, type = 'vector', ...))
-  } else if(object$model$method == 'class'){
-    out <- predict(object[['model']], newx, type = 'prob', ...)
-    if(ncol(out) == 2){
-      return(out[,1])
-    } else{
-      #Dangerous... not planning to support multiclass yet
-      return(out)
-    }
-  } else{
-    stop(paste('rpart method', object$model$method, 'not supported'))
-  }
+  newx <- as.matrix(newx %*% object[['r']])
+  predict(object[['model']], newx, type = 'link', n.trees=object$gbm_control$n.trees, ...)
 }
 
 #' @title pirouette
@@ -155,7 +166,8 @@ predict.enpointe <- function(object, newx, ...){
 #' @param y the target variable for classification or regression
 #' @param prob the probability each entry of the rotation matrix is non-zero.  1/3 is one heuristic to use (for 3x faster processing), 1/sqrt(ncol(x)) is another, for sqrt(x)-fold faster processing.  Passed through enpointe to splat.
 #' @param ctrl a list of control parameters for the algorithm
-#' @param ... passed through enpointe to rpart
+#' @param gbm_control a list of control parameters for the gbm
+#' @param ... passed through enpointe to gbm
 #'
 #'@references \itemize{
 #'  \item{\url{https://stat.ethz.ch/pipermail/r-sig-hpc/2013-January/001575.html}}
@@ -165,7 +177,16 @@ predict.enpointe <- function(object, newx, ...){
 #' @importFrom foreach foreach %do% %dopar%
 #' @return an object of class pirouette
 #' @export
-pirouette <- function(x, y, prob=1/sqrt(ncol(x)), ctrl = pirouetteControl(), ...){
+pirouette <- function(
+  x, y,
+  prob=1/sqrt(ncol(x)),
+  ctrl = pirouetteControl(),
+  gbm_control = list(
+    n.trees=1,
+    interaction.depth=2,
+    shrinkage=0.1,
+    verbose=FALSE
+  ), ...){
 
   stopifnot(is.vector(y) | is.factor(y))
   stopifnot(nrow(x) == length(y))
@@ -209,7 +230,7 @@ pirouette <- function(x, y, prob=1/sqrt(ncol(x)), ctrl = pirouetteControl(), ...
 #' @examples
 #' nrow <- 10000
 #' ncol <- 100
-#' m <- pirouette(matrix(runif(nrow * ncol), ncol=ncol), runif(nrow))
+#' m <- pirouette(matrix(runif(nrow * ncol), ncol=ncol), runif(nrow), distribution='gaussian')
 #' predict(m, matrix(runif(ncol), ncol=ncol))
 predict.pirouette <- function(object, newx, allowParallel = FALSE, ...){
 

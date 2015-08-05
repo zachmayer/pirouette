@@ -15,7 +15,7 @@ Imports:
     Matrix,
     foreach,
     methods,
-    rpart
+    gbm
 License: MIT + file LICENSE
 LazyData: TRUE
 Suggests:

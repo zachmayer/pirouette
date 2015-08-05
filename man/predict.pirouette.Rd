@@ -24,7 +24,7 @@ Predict from a pirouette forest
 \examples{
 nrow <- 10000
 ncol <- 100
-m <- pirouette(matrix(runif(nrow * ncol), ncol=ncol), runif(nrow))
+m <- pirouette(matrix(runif(nrow * ncol), ncol=ncol), runif(nrow), distribution='gaussian')
 predict(m, matrix(runif(ncol), ncol=ncol))
 }
 

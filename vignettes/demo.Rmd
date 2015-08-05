@@ -19,10 +19,10 @@ summary(X@x)
 ```
 
 Pretend our target is a simple logistic regression:
+(TODO: change back to xor problem)
 ```{r}
 Y <- (X %*% rnorm(ncol(X)))[,1]
-Y <- Y >= 0
-Y <- factor(Y)
+Y <- as.integer(Y >= 0)
 table(Y)
 ```
 
@@ -31,16 +31,23 @@ Benchmark runtime vs glmnet:
 suppressMessages(library(microbenchmark))
 suppressMessages(library(glmnet))
 suppressMessages(library(pirouette))
-suppressMessages(library(rpart))
 train_rows <- sample(c(TRUE, FALSE), nrow(X), replace=TRUE)
 microbenchmark(
   pirouette_model = pirouette_model <- pirouette(
-    X[train_rows,], Y[train_rows], prob=10/sqrt(ncol(x)), ctrl = pirouetteControl(
-      ntrees=100, newdim=5
-      )
+    X[train_rows,], Y[train_rows], prob=10/sqrt(ncol(X)), 
+    ctrl = pirouetteControl(
+      ntrees=10, newdim=3
+      ),
+    gbm_control = list(
+      n.trees=1,
+      interaction.depth=1,
+      shrinkage=.75,
+      verbose=FALSE
+    ),
+    distribution = 'bernoulli'
     ),
   glmnet_model = glmnet_model <- glmnet(
-    X[train_rows,], Y[train_rows], family='binomial'),
+    X[train_rows,], factor(Y)[train_rows], family='binomial'),
   times = 1
 )
 object.size(pirouette_model) / object.size(glmnet_model)
