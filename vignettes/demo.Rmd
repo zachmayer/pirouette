@@ -36,7 +36,7 @@ microbenchmark(
   pirouette_model = pirouette_model <- pirouette(
     X[train_rows,], Y[train_rows], prob=10/sqrt(ncol(X)), 
     ctrl = pirouetteControl(
-      ntrees=10, newdim=3
+      ntrees=100, newdim=3
       ),
     gbm_control = list(
       n.trees=1,
